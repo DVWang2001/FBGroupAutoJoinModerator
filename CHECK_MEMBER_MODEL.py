@@ -3,6 +3,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 
 import json
 import os
@@ -12,7 +14,7 @@ import random
 import traceback
 
 
-def check_member_facade(ans,url,rule,wait_second = [4,10]):
+def check_member_facade(ans,url,rule,wait_second = [240,250]):
         def prepare_driver():
             # 設定 User-Agent
             user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
@@ -24,8 +26,9 @@ def check_member_facade(ans,url,rule,wait_second = [4,10]):
             options.add_argument(f"user-agent={user_agent}")  # 設定 User-Agent
 
             # 1. 啟動瀏覽器
-            driver = webdriver.Chrome(options=options)
-
+            service = Service(ChromeDriverManager().install())  # Selenium 4 的新寫法
+            driver = webdriver.Chrome(service=service,options=options)
+            
             # 2. 先訪問目標網站 (與 Cookie 作用的 domain 一致)
             driver.get("https://www.facebook.com/")
 
