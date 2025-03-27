@@ -8,13 +8,11 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 import json
 import os
-import sys
 import time
 import random
-import traceback
+import re
 
-
-def check_member_facade(ans,url,rule,wait_second = [240,250]):
+def check_member_facade(ans,url,rule,wait_second = [3,4]):
         def prepare_driver():
             # 設定 User-Agent
             user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
@@ -52,12 +50,23 @@ def check_member_facade(ans,url,rule,wait_second = [240,250]):
             return driver
         driver = prepare_driver()
 
-
+        ALL_NUMBER = 0
         def EnterToPage():
             driver.get(url)
             MOVE = WebDriverWait(driver, 120).until(EC.element_to_be_clickable((By.XPATH, "//span[contains(text(), '申請')]")))
+            number = re.sub(r'\D+','',MOVE.find_element(By.XPATH,"//div[contains(text(), '今天有')]").text)
+            ALL_NUMBER = int(number)
             driver.execute_script("arguments[0].click();",MOVE)
             time.sleep(1)
+        def RestAndPrepareNewDriver():
+            print(f'休眠{SLEEP/60}分鐘緩衝，請稍後'+'.'*30)
+            SLEEP = random.randint(600,700)
+            time.sleep(SLEEP)
+            ERROR = 0
+            print('重開瀏覽器')
+            driver.quit()
+            driver = prepare_driver()
+            return driver
         EnterToPage()
         NowTime = time.time()
         ERROR = 0
@@ -78,6 +87,9 @@ def check_member_facade(ans,url,rule,wait_second = [240,250]):
                 else:
                     driver.execute_script("arguments[0].click();", pages.find_element(By.CSS_SELECTOR, '[aria-label="拒絕"]'))
                     print(f'拒絕{name}入社')
+                ALL_NUMBER -= 1
+                if ALL_NUMBER == 0:
+                    driver = RestAndPrepareNewDriver()
             except Exception as e:
                 if len(driver.find_elements(By.CSS_SELECTOR, '[aria-label="重新載入頁面"]')):
                     RETRY = driver.find_element(By.CSS_SELECTOR, '[aria-label="重新載入頁面"]')
@@ -88,13 +100,7 @@ def check_member_facade(ans,url,rule,wait_second = [240,250]):
                 print(f'壞{ERROR}次\n錯誤訊息:{e}\n')
                 time.sleep(1)
                 if ERROR >= 10:
-                    SLEEP = random.randint(600,700)
-                    print(f'休眠{SLEEP/60}分鐘緩衝，請稍後'+'.'*30)
-                    time.sleep(SLEEP)
-                    ERROR = 0
-                    print('重開瀏覽器')
-                    driver.quit()
-                    driver = prepare_driver()
+                    driver = RestAndPrepareNewDriver()
                 broken = 0
                 while broken < 10:
                     try:
