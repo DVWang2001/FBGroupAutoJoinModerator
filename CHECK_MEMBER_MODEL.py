@@ -10,7 +10,6 @@ import json
 import os
 import time
 import random
-import re
 
 def check_member_facade(ans,url,rule,wait_second = [3,4]):
         def prepare_driver():
@@ -18,8 +17,8 @@ def check_member_facade(ans,url,rule,wait_second = [3,4]):
             user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
             # 建立 ChromeOptions
             options = webdriver.ChromeOptions()
-            #options.add_argument("--headless")  # 啟用無頭模式
-            #options.add_argument("--disable-gpu")  # 可能有助於在某些系統上穩定運行
+            options.add_argument("--headless")  # 啟用無頭模式
+            options.add_argument("--disable-gpu")  # 可能有助於在某些系統上穩定運行
             options.add_argument("--window-size=1920x1080")  # 設定視窗大小，避免某些元素無法渲染
             options.add_argument(f"user-agent={user_agent}")  # 設定 User-Agent
 
@@ -54,13 +53,15 @@ def check_member_facade(ans,url,rule,wait_second = [3,4]):
         def EnterToPage():
             driver.get(url)
             MOVE = WebDriverWait(driver, 120).until(EC.element_to_be_clickable((By.XPATH, "//span[contains(text(), '申請')]")))
-            number = re.sub(r'\D+','',MOVE.find_element(By.XPATH,"//div[contains(text(), '今天有')]").text)
+            number = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR,".x6s0dn4.x3nfvp2.x5yr21d.xl56j7k.xexx8yu.x18d9i69.x1t2a60a.x1mpkggp.xh8yej3.x1mvi0mv"))).text
+            print(f'這是{number}')
             ALL_NUMBER = int(number)
+            print(f'現在有{ALL_NUMBER}個入社申請')
             driver.execute_script("arguments[0].click();",MOVE)
             time.sleep(1)
         def RestAndPrepareNewDriver():
-            print(f'休眠{SLEEP/60}分鐘緩衝，請稍後'+'.'*30)
             SLEEP = random.randint(600,700)
+            print(f'休眠{SLEEP/60}分鐘緩衝，請稍後'+'.'*30)
             time.sleep(SLEEP)
             ERROR = 0
             print('重開瀏覽器')
@@ -79,13 +80,14 @@ def check_member_facade(ans,url,rule,wait_second = [3,4]):
                 if pages.text == pre:
                     EnterToPage()
                     continue
+                print(pages.text)
                 ERROR = 0
                 pre = pages.text
                 if rule(pages,ans) :
-                    driver.execute_script("arguments[0].click();", pages.find_element(By.CSS_SELECTOR, '[aria-label="批准"]'))
+                    driver.execute_script("arguments[0].click();", pages.find_element(By.XPATH, './/*[contains(@aria-label, "批准")]'))
                     print(f'批准{name}入社')
                 else:
-                    driver.execute_script("arguments[0].click();", pages.find_element(By.CSS_SELECTOR, '[aria-label="拒絕"]'))
+                    driver.execute_script("arguments[0].click();", pages.find_element(By.XPATH, './/*[contains(@aria-label, "拒絕")]'))
                     print(f'拒絕{name}入社')
                 ALL_NUMBER -= 1
                 if ALL_NUMBER == 0:
