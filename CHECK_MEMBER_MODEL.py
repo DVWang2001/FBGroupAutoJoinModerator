@@ -10,15 +10,17 @@ import json
 import os
 import time
 import random
+import re
 
 def check_member_facade(ans,url,rule,wait_second = [3,4]):
+        ALL_NUMBER = 0
         def prepare_driver():
             # 設定 User-Agent
             user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
             # 建立 ChromeOptions
             options = webdriver.ChromeOptions()
-            options.add_argument("--headless")  # 啟用無頭模式
-            options.add_argument("--disable-gpu")  # 可能有助於在某些系統上穩定運行
+            #options.add_argument("--headless")  # 啟用無頭模式
+            #options.add_argument("--disable-gpu")  # 可能有助於在某些系統上穩定運行
             options.add_argument("--window-size=1920x1080")  # 設定視窗大小，避免某些元素無法渲染
             options.add_argument(f"user-agent={user_agent}")  # 設定 User-Agent
 
@@ -48,16 +50,20 @@ def check_member_facade(ans,url,rule,wait_second = [3,4]):
             time.sleep(4)
             return driver
         driver = prepare_driver()
-
-        ALL_NUMBER = 0
         def EnterToPage():
+            nonlocal ALL_NUMBER
             driver.get(url)
             MOVE = WebDriverWait(driver, 120).until(EC.element_to_be_clickable((By.XPATH, "//span[contains(text(), '申請')]")))
-            number = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR,".x6s0dn4.x3nfvp2.x5yr21d.xl56j7k.xexx8yu.x18d9i69.x1t2a60a.x1mpkggp.xh8yej3.x1mvi0mv"))).text
-            print(f'這是{number}')
-            ALL_NUMBER = int(number)
-            print(f'現在有{ALL_NUMBER}個入社申請')
             driver.execute_script("arguments[0].click();",MOVE)
+            try:
+                number = re.sub(r'\D+','',WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR,".x193iq5w.xeuugli.x13faqbe.x1vvkbs.x1xmvt09.xngnso2.x1qb5hxa.x1xlr1w8.xi81zsa"))).text)
+                print(f'這是{number}')
+                ALL_NUMBER = int(number)
+            except:
+                print(f'沒有入社申請')
+                ALL_NUMBER = 0
+            print(f'現在有{ALL_NUMBER}個入社申請')
+            
             time.sleep(1)
         def RestAndPrepareNewDriver():
             SLEEP = random.randint(600,700)
@@ -74,13 +80,15 @@ def check_member_facade(ans,url,rule,wait_second = [3,4]):
         pre = ''
         while True:
             try:
-                pages = WebDriverWait(driver, 120).until(EC.presence_of_element_located((By.CSS_SELECTOR,'.x1jx94hy.x30kzoy.x9jhf4c.xgqcy7u.x1lq5wgf.xev17xk.xktsk01.x1d52u69.x19i0xim.x6ikm8r.x10wlt62.x1n2onr6')))
+                if ALL_NUMBER == 0:
+                    driver = RestAndPrepareNewDriver()
+                pages = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR,'.x1jx94hy.x30kzoy.x9jhf4c.xgqcy7u.x1lq5wgf.xev17xk.xktsk01.x1d52u69.x19i0xim.x6ikm8r.x10wlt62.x1n2onr6')))
                 name = pages.find_element(By.CSS_SELECTOR,'.xu06os2.x1ok221b').text
                 time.sleep(random.randint(*wait_second))
                 if pages.text == pre:
                     EnterToPage()
                     continue
-                print(pages.text)
+                # print(pages.text)
                 ERROR = 0
                 pre = pages.text
                 if rule(pages,ans) :
@@ -90,8 +98,7 @@ def check_member_facade(ans,url,rule,wait_second = [3,4]):
                     driver.execute_script("arguments[0].click();", pages.find_element(By.XPATH, './/*[contains(@aria-label, "拒絕")]'))
                     print(f'拒絕{name}入社')
                 ALL_NUMBER -= 1
-                if ALL_NUMBER == 0:
-                    driver = RestAndPrepareNewDriver()
+                print(f'目前的{ALL_NUMBER}')
             except Exception as e:
                 if len(driver.find_elements(By.CSS_SELECTOR, '[aria-label="重新載入頁面"]')):
                     RETRY = driver.find_element(By.CSS_SELECTOR, '[aria-label="重新載入頁面"]')
