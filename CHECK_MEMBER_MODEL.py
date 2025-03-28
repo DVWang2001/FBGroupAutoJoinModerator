@@ -104,22 +104,11 @@ def check_member_facade(ans,url,rule,wait_second = [3,4]):
                     RETRY = driver.find_element(By.CSS_SELECTOR, '[aria-label="重新載入頁面"]')
                     driver.execute_script("arguments[0].click();", RETRY)
                     continue
-
+                else:
+                    EnterToPage()
                 ERROR += 1
                 print(f'壞{ERROR}次\n錯誤訊息:{e}\n')
                 time.sleep(1)
                 if ERROR >= 10:
                     driver = RestAndPrepareNewDriver()
-                broken = 0
-                while broken < 10:
-                    try:
-                        EnterToPage()
-                        break
-                    except:
-                        broken += 1
-                        continue
-                if broken == 10:
-                    print('重開瀏覽器')
-                    prepare_driver()
-                    EnterToPage()
 
