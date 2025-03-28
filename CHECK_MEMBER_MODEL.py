@@ -12,7 +12,7 @@ import time
 import random
 import re
 
-def check_member_facade(ans,url,rule,wait_second = [3,4]):
+def check_member_facade(ans,url,rule,wait_second = [240,300]):
         ALL_NUMBER = 0
         def prepare_driver():
             # 設定 User-Agent
@@ -65,8 +65,8 @@ def check_member_facade(ans,url,rule,wait_second = [3,4]):
             print(f'現在有{ALL_NUMBER}個入社申請')
             
             time.sleep(1)
-        def RestAndPrepareNewDriver():
-            SLEEP = random.randint(600,700)
+        def RestAndPrepareNewDriver(driver):
+            SLEEP = random.randint(*wait_second)*10
             print(f'休眠{SLEEP/60}分鐘緩衝，請稍後'+'.'*30)
             time.sleep(SLEEP)
             ERROR = 0
@@ -81,7 +81,9 @@ def check_member_facade(ans,url,rule,wait_second = [3,4]):
         while True:
             try:
                 if ALL_NUMBER == 0:
-                    driver = RestAndPrepareNewDriver()
+                    driver = RestAndPrepareNewDriver(driver)
+                    EnterToPage()
+                    continue
                 pages = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR,'.x1jx94hy.x30kzoy.x9jhf4c.xgqcy7u.x1lq5wgf.xev17xk.xktsk01.x1d52u69.x19i0xim.x6ikm8r.x10wlt62.x1n2onr6')))
                 name = pages.find_element(By.CSS_SELECTOR,'.xu06os2.x1ok221b').text
                 time.sleep(random.randint(*wait_second))
@@ -110,5 +112,5 @@ def check_member_facade(ans,url,rule,wait_second = [3,4]):
                 print(f'壞{ERROR}次\n錯誤訊息:{e}\n')
                 time.sleep(1)
                 if ERROR >= 10:
-                    driver = RestAndPrepareNewDriver()
+                    driver = RestAndPrepareNewDriver(driver)
 
