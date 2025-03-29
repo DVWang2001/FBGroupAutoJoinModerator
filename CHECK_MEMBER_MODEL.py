@@ -19,8 +19,8 @@ def check_member_facade(ans,url,rule,wait_second = [240,300]):
             user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
             # 建立 ChromeOptions
             options = webdriver.ChromeOptions()
-            #options.add_argument("--headless")  # 啟用無頭模式
-            #options.add_argument("--disable-gpu")  # 可能有助於在某些系統上穩定運行
+            options.add_argument("--headless")  # 啟用無頭模式
+            options.add_argument("--disable-gpu")  # 可能有助於在某些系統上穩定運行
             options.add_argument("--window-size=1920x1080")  # 設定視窗大小，避免某些元素無法渲染
             options.add_argument(f"user-agent={user_agent}")  # 設定 User-Agent
 
@@ -63,8 +63,11 @@ def check_member_facade(ans,url,rule,wait_second = [240,300]):
                 print(f'沒有入社申請')
                 ALL_NUMBER = 0
             print(f'現在有{ALL_NUMBER}個入社申請')
-            
-            time.sleep(1)
+            SORT = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR,"[aria-label='排序依據']")))
+            driver.execute_script("arguments[0].click();",SORT)
+            ascending = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, './/span[text()="由舊到新"]')))
+            driver.execute_script("arguments[0].click();",ascending)
+            time.sleep(5)
         def RestAndPrepareNewDriver(driver):
             SLEEP = random.randint(*wait_second)*10
             print(f'休眠{SLEEP/60}分鐘緩衝，請稍後'+'.'*30)
