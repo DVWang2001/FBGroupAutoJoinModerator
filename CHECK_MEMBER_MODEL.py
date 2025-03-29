@@ -68,7 +68,15 @@ def check_member_facade(ans,url,rule,wait_second = [240,300]):
         def RestAndPrepareNewDriver(driver):
             SLEEP = random.randint(*wait_second)*10
             print(f'休眠{SLEEP/60}分鐘緩衝，請稍後'+'.'*30)
-            time.sleep(SLEEP)
+            total_sleep = 0
+            while total_sleep < SLEEP:
+                print(f'已休眠 {total_sleep/60:.1f} 分鐘 / {SLEEP/60:.1f} 分鐘', end='\r')
+                if total_sleep+60 < SLEEP:
+                    time.sleep(60)  # 每 60 秒檢查一次
+                    total_sleep += 60
+                else:
+                    time.sleep(SLEEP-total_sleep)
+                    total_sleep = SLEEP
             ERROR = 0
             print('重開瀏覽器')
             driver.quit()
